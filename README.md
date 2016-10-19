@@ -4,6 +4,9 @@
 # Real Time Protocol in C
 ## Payloader example
 This is a RAW (YUV) Real Time Protocol pay-loader written in C. This example is send only to recieve the data you can use the gstreamer pipeline below.
+
+> **note** : This example has been tested on 64 bit ARM. Target hardware was the Nvidia Jetson TX1 and Abaco Systems GVC1000.
+
 ## gstreamer YUV streaming examples
 Use this pipeline as a tes payloader to make sure gstreamer is working:
 
