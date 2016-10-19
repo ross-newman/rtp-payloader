@@ -20,6 +20,8 @@ Run the example
     ./rtpstream
 Catch the stream using the gstreamer src pipeline in the section below.
 
+> **note** : This example uses the lena (.png) test image as the source of the video stream. You can replace lena with your own image or use another source for the video data.
+
 ## gstreamer YUV streaming examples
 Use this pipeline as a tes payloader to make sure gstreamer is working:
 
