@@ -28,3 +28,7 @@ Use this pipeline as a tes payloader to make sure gstreamer is working:
 Use this pipeline to capture the stream:
 
     gst-launch-1.0 udpsrc port=5004 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:2, depth=(string)8, width=(string)640, height=(string)480, payload=(int)96" ! queue ! rtpvrawdepay ! queue ! xvimagesink sync=false
+    
+Gstreamer running with test image (480x480):
+
+![Lena test image](docs/lena-test.png)
