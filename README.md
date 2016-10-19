@@ -6,6 +6,15 @@
 This is a RAW (YUV) Real Time Protocol pay-loader written in C. This example is send only to recieve the data you can use the gstreamer pipeline below.
 
 > **note** : This example has been tested on 64 bit ARM. Target hardware was the Nvidia Jetson TX1 and Abaco Systems GVC1000.
+# Installation
+clone the code.
+    https://github.com/ross-abaco/rtp-payloader
+Build the example
+    cd rtpstream
+    make
+Run the example
+    ./rtpstream
+Catch the stream using the gstreamer src pipeline in the section below.
 
 ## gstreamer YUV streaming examples
 Use this pipeline as a tes payloader to make sure gstreamer is working:
