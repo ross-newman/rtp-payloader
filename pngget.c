@@ -104,9 +104,9 @@ void read_png_file(char* file_name)
         if (setjmp(png_jmpbuf(png_ptr)))
                 abort_("[read_png_file] Error during read_image");
 
-        printf("size=%d\n", sizeof(png_bytep) * height);
+        printf("size=%d\n", (int)(sizeof(png_bytep) * height));
         row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-        printf("size=%d\n", png_get_rowbytes(png_ptr,info_ptr));
+        printf("size=%d\n", (int)png_get_rowbytes(png_ptr,info_ptr));
         for (y=0; y<height; y++)
                 row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
 

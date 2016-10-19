@@ -81,6 +81,7 @@ typedef struct  __attribute__((__packed__))
 {
   rtp_header rtp;
   payload_header payload;
+  int8_t pad;
 } header;
 
 typedef struct 
@@ -121,14 +122,14 @@ void update_header(header *packet, int line, int last, int32_t timestamp, int32_
 }
 
 #if ARM
-endianswap32(uint32_t *data, int length)
+void endianswap32(uint32_t *data, int length)
 {
   int c = 0;
   for (c=0;c<length;c++)
     data[c] = __bswap_32 (data[c]);
 }
 
-endianswap16(uint16_t *data, int length)
+void endianswap16(uint16_t *data, int length)
 {
   int c = 0;
   for (c=0;c<length;c++)
@@ -211,7 +212,7 @@ int main(int argc, char **argv) {
         endianswap32((uint32_t *)&packet, sizeof(rtp_header)/4);
         endianswap16((uint16_t *)&packet.head.payload, sizeof(payload_header)/2);
 #endif
-        n = sendto(sockfd, (char *)&packet, sizeof(rtp_packet), 0, &serveraddr, serverlen);
+        n = sendto(sockfd, (char *)&packet, sizeof(rtp_packet), 0, (void*)&serveraddr, serverlen);
         if (n < 0) 
           error("ERROR in sendto");
       }
