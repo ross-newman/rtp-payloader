@@ -20,7 +20,7 @@ Run the example
     ./rtpstream
 Catch the stream using the gstreamer src pipeline in the section below.
 
-> **NOTE** : This example uses the lena (.png) test image as the source of the video stream. You can replace lena with your own image or use another source for the video data.
+> **NOTE** : This example uses the test image ([lena-lg.png](lena-lg.png)) as the source of the video stream. You can replace lena with your own image or use another source for the video data.
 
 ## gstreamer YUV streaming examples
 Use this pipeline as a tes payloader to make sure gstreamer is working:
@@ -31,6 +31,6 @@ Use this pipeline to capture the stream:
 
     gst-launch-1.0 udpsrc port=5004 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:2, depth=(string)8, width=(string)640, height=(string)480, payload=(int)96" ! queue ! rtpvrawdepay ! queue ! xvimagesink sync=false
     
-Gstreamer running with test image (480x480):
+Gstreamer running with test image [lena-lg.png](lena-lg.png) (480x480):
 
 ![Lena test image](docs/lena-test.png)
