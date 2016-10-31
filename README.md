@@ -1,5 +1,4 @@
-
-![Abaco stripe](docs/abaco-banner.png)
+![Abaco stripe](docs/Abaco_background-1000x275.png)
 
 # Real Time Protocol in C
 ## Payloader example
@@ -34,3 +33,6 @@ Use this pipeline to capture the stream:
 Gstreamer running with test image [lena-lg.png](lena-lg.png) (480x480):
 
 ![Lena test image](docs/lena-test.png)
+
+
+![Abaco stripe](docs/Abaco Footer1000x100.png)
