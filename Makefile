@@ -1,2 +1,2 @@
 rtpstream: rtpstream.c pngget.c
-	gcc -o rtpstream rtpstream.c pngget.c -I. -lpng
+	g++ -o transmit rtpStream.cpp example.cpp pngget.c -I. -lpng -lpthread

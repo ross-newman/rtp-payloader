@@ -1,6 +1,8 @@
+#ifndef PNGGET_H
+#define PNGGET_H
 #include <png.h>
-png_structp png_ptr;
-png_bytep * row_pointers;
+png_bytep * get_row_pointwes();
 void read_png_file(char* file_name);
-void rgbtoyuv(int x, int y, char* yuv, char* rgb);
+#endif
+
 

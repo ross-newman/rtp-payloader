@@ -6,7 +6,10 @@
 #include "pngget.h"
 
 #define PNG_DEBUG 3
+png_structp png_ptr;
 
+png_bytep * row_pointers;
+png_bytep * get_row_pointwes() { return row_pointers; }
 
 void abort_(const char * s, ...)
 {
@@ -18,42 +21,12 @@ void abort_(const char * s, ...)
         abort();
 }
 
-void rgbtoyuv(int y, int x, char* yuv, char* rgb)
-{
-  int c,cc,R,G,B,Y,U,V;
-  int size;
-  
-  cc=0;
-  size = x*3;
-  for (c=0;c<size;c+=3)
-  {
-    R=rgb[c];
-    G=rgb[c+1];
-    B=rgb[c+2];
-    /* sample luma for every pixel */
-    Y  =      (0.257 * R) + (0.504 * G) + (0.098 * B) + 16;
-    yuv[cc]=Y;
-    if (c % 2 == 0)
-    {
-        V =  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128;
-        yuv[cc+1]=V;
-    }
-    else
-    {
-        U = -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128;
-        yuv[cc+1]=U;
-    }
-    cc+=2;
-  }
-}
-
 int x, y;
 
 int width, height;
 png_byte color_type;
 png_byte bit_depth;
 
-png_structp png_ptr;
 png_infop info_ptr;
 int number_of_passes;
 
@@ -67,7 +40,7 @@ void read_png_file(char* file_name)
         if (!fp)
                 abort_("[read_png_file] File %s could not be opened for reading", file_name);
         fread(header, 1, 8, fp);
-        if (png_sig_cmp(header, 0, 8))
+        if (png_sig_cmp((png_bytep)header, 0, 8))
                 abort_("[read_png_file] File %s is not recognized as a PNG file", file_name);
 
 
@@ -92,7 +65,6 @@ void read_png_file(char* file_name)
         width = png_get_image_width(png_ptr, info_ptr);
         height = png_get_image_height(png_ptr, info_ptr);
         
-        printf("height=%d, width=%d\n", height, width);
         color_type = png_get_color_type(png_ptr, info_ptr);
         bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
@@ -104,9 +76,7 @@ void read_png_file(char* file_name)
         if (setjmp(png_jmpbuf(png_ptr)))
                 abort_("[read_png_file] Error during read_image");
 
-        printf("size=%d\n", (int)(sizeof(png_bytep) * height));
         row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-        printf("size=%d\n", (int)png_get_rowbytes(png_ptr,info_ptr));
         for (y=0; y<height; y++)
                 row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
 
