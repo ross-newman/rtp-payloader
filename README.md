@@ -37,4 +37,4 @@ Gstreamer running with test image [lena-lg.png](lena-lg.png) (480x480):
 ![Lena test image](docs/lena-test.png)
 
 
-![Abaco stripe](docs/Abaco Footer1000x100.png)
+![Abaco stripe](docs/Abaco%20Footer1000x100.png)
