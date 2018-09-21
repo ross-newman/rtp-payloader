@@ -1,6 +1,8 @@
 ![Abaco stripe](docs/Abaco_background-1000x275.png)
 
 # Real Time Protocol in C
+This code implements RFC4421 RTP (Real Time Protocol) Payload Format for Uncompressed Video but is mandated by the UK MoD as part of DEF STAN 00-82 (VIVOE) uncompressed RTP video straming protocol for real time video. If you are not familiar with the Generic Vehicle Architecture (DEF STAN 00-23) and VIVOE then you can read more [here](https://en.wikipedia.org/wiki/Generic_Vehicle_Architecture).
+
 ## Payloader example
 This is a RAW (YUV) Real Time Protocol pay-loader written in C. This example is send only to recieve the data you can use the gstreamer pipeline below.
 
