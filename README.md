@@ -1,5 +1,3 @@
-![Abaco stripe](docs/Abaco_background-1000x275.png)
-
 # Real Time Protocol in C
 This code implements RFC4421 RTP (Real Time Protocol) Payload Format for Uncompressed Video but is mandated by the UK MoD as part of DEF STAN 00-82 (VIVOE) uncompressed RTP video straming protocol for real time video. If you are not familiar with the Generic Vehicle Architecture (DEF STAN 00-23) and VIVOE then you can read more [here](https://en.wikipedia.org/wiki/Generic_Vehicle_Architecture).
 
@@ -35,6 +33,3 @@ Use this pipeline to capture the stream:
 Gstreamer running with test image [lena-lg.png](lena-lg.png) (480x480):
 
 ![Lena test image](docs/lena-test.png)
-
-
-![Abaco stripe](docs/Abaco%20Footer1000x100.png)
