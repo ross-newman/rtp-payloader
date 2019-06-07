@@ -5,16 +5,7 @@ language: cpp
 compiler:
   - gcc
 
-# Install
-install: true
-
-matrix:
-  include:
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.9
+# Script
+script:
+  - cd ./rtp-payloader
+  - make
