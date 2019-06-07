@@ -1,3 +1,4 @@
+dist: xenial
 install:  true
 compiler:
   - gcc
