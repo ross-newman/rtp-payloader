@@ -1,3 +1,4 @@
+![Travis Build Status](https://travis-ci.com/ross-newman/rtp-payloader.svg?branch=master)
 # Real Time Protocol in C
 This code implements RFC4421 RTP (Real Time Protocol) Payload Format for Uncompressed Video but is mandated by the UK MoD as part of DEF STAN 00-82 (VIVOE) uncompressed RTP video straming protocol for real time video. If you are not familiar with the Generic Vehicle Architecture (DEF STAN 00-23) and VIVOE then you can read more [here](https://en.wikipedia.org/wiki/Generic_Vehicle_Architecture).
 
