@@ -1,11 +1,7 @@
-# Enable C++ support
+sudo: false
 language: cpp
-
-# Compiler selection
 compiler:
   - gcc
-
-# Script
+  - clang
 script:
-  - cd ./rtp-payloader
   - make
