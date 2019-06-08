@@ -9,22 +9,23 @@ This is a RAW (YUV) Real Time Protocol pay-loader written in C. This example is 
 > **NOTE** : This example has been tested on 64 bit ARM. Target hardware was the Nvidia Jetson TX1/TX2 and Abaco Systems GVC1000. Code is endian swapped. To run on intel set #define ARM  0 in [rtpstream.c](rtpstream.c). If you see jitter then modify rc.local as per [rc.local](tx1/rc.local)
 
 # Installation
-clone the code.
-
-    git clone https://github.com/ross-abaco/rtp-payloader
 Build the example
-
-    cd rtpstream
-    make
+```
+mkdir build
+cmake ..
+```
 Run the example
-
-    ./rtpstream
+```
+./rtp-example
+```
 Catch the stream using the gstreamer src pipeline in the section below.
 
 > **NOTE** : This example uses the test image ([lena-lg.png](lena-lg.png)) as the source of the video stream. You can replace lena with your own image or use another source for the video data.
 
 ## gstreamer YUV streaming examples
-Use this pipeline as a tes payloader to make sure gstreamer is working:
+The test script test02.sh runs the example program against gstreamer.
+
+Use this pipeline as a test payloader to make sure gstreamer is working:
 
     gst-launch-1.0 videotestsrc ! video/x-raw, format=UYVY, framerate=25/1, width=640, height=480 ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port=5004
 
