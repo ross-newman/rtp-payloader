@@ -3,4 +3,4 @@ install:  true
 compiler:
   - gcc
 script:
-  - mkdir build && ch build && cmake .. && make
+  - mkdir build && cd build && cmake .. && make
