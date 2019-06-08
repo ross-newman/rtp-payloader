@@ -37,7 +37,7 @@ Use his program to stream data to the udpsc example above on the tegra X1
 #include <netdb.h> 
 #include "pngget.h"
 
-#define ARM                   1    /* Perform endian swap */
+#define ARM                   0    /* Perform endian swap */
 #define RTP_VERSION           0x2  /* RFC 1889 Version 2 */
 #define RTP_PADDING           0x0
 #define RTP_EXTENSION         0x0
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     
     yuv = malloc((STREAM_WIDTH * STREAM_HEIGHT) * 2);
 
-    printf("Abaco Systems\n");
+    printf("rtp-example, Author ross@rossnewman.com\n");
     sequence_number=0;
     
     read_png_file("lenna-lg.png");
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
         if (c==STREAM_HEIGHT-1) last=1;
         update_header((header*)&packet, c, last, time, RTP_SOURCE);
 
-#if 0
+#if 1
         /* update scan line with white noise UYUV format */
         for (x=0;x<STREAM_WIDTH;x++)
         {

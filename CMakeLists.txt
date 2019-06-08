@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 2.8)
+project(rtp-payloader)
+message(STATUS "PROJECT_NAME = ${PROJECT_NAME}")
+add_library(rtp-payloader rtpStream.cpp )
+target_link_libraries(rtp-payloader png pthread)
+set_target_properties(rtp-payloader PROPERTIES SOVERSION 1)
+#set_target_properties(rtp-payloader PROPERTIES VERSION ${PROJECT_VERSION})
+
+project(rtp-example)
+message(STATUS "PROJECT_NAME = ${PROJECT_NAME}")
+add_executable(rtp-example example.cpp pngget.cpp)
+target_link_libraries(rtp-example rtp-payloader)
+file(COPY lenna-lg.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
