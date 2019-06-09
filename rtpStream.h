@@ -90,57 +90,55 @@ typedef struct  __attribute__((__packed__))
   char data[MAX_BUFSIZE];
 } rtp_packet;
 
-void rgbtoyuv(int y, int x, char* yuv, char* rgb);
-
+void yuvtorgb(int height, int width, char* yuv, char* rgba);
+void rgbtoyuv(int height, int width, char* rgb, char* yuv);
+void yuvtorgba(int height, int width, char* yuv, char* rgba);
+void yuvtorgb(int height, int width, char* yuv, char* rgb);
 /**
  * rtpstream RGB data
  */
 class rtpStream 
 {
 public:
-    rtpStream(int height, int width);
-    ~rtpStream();
+  rtpStream(int height, int width);
+  ~rtpStream();
 	void rtpStreamOut(char* hostname, int port);
 	void rtpStreamIn(char* hostname, int port);
-	int Transmit(char* rgbframe, bool gpuAddr);
-    bool Open();
+	int Transmit(char* rgbframe);
+  bool Open();
 	void Close();
-    bool Capture( void** cpu, void** cuda, unsigned long timeout=ULONG_MAX );
-    int mSockfdIn;
-    int mSockfdOut;
-    struct sockaddr_in mServeraddrIn;
-    struct sockaddr_in mServeraddrOut;
-    socklen_t mServerlenIn;
-    socklen_t mServerlenOut;
-    pthread_mutex_t mutex;
-    unsigned int mFrame;
-  	char* gpuBuffer;
+  bool Recieve( void** cpu, unsigned long timeout=ULONG_MAX );
+  int mSockfdIn;
+  int mSockfdOut;
+  struct sockaddr_in mServeraddrIn;
+  struct sockaddr_in mServeraddrOut;
+  socklen_t mServerlenIn;
+  socklen_t mServerlenOut;
+  pthread_mutex_t mutex;
+  unsigned int mFrame;
+  char* gpuBuffer;
 	char udpdata[MAX_UDP_DATA];
-    char* bufferIn;
+  char* bufferIn;
 	void update_header(header *packet, int line, int last, int32_t timestamp, int32_t source);
 private:
-    struct hostent *mServerIn;
-    struct hostent *mServerOut;
-    int mHeight;
-    int mWidth;
+  struct hostent *mServerIn;
+  struct hostent *mServerOut;
+  int mHeight;
+  int mWidth;
 	// Ingress port
-    char mHostnameIn[100];
-    int mPortNoIn;
+  char mHostnameIn[100];
+  int mPortNoIn;
 	// Egress port
-    char mHostnameOut[100];
-    int mPortNoOut;
+  char mHostnameOut[100];
+  int mPortNoOut;
 };
 
 typedef struct
 {
 	char* rgbframe;
 	char* yuvframe;
-	bool gpuAddr;
 	uint32_t width;
 	uint32_t height;
 	rtpStream *stream;
 } tx_data;
-
-
-
 #endif

@@ -3,47 +3,24 @@
  * 	sudo route add -net 239.0.0.0 netmask 255.0.0.0 eth1
  */
 
+#include <iostream>
+#include <string>
 #include <pthread.h>
 #include <sched.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
+extern "C" {
+#include "libswscale/swscale.h"
+}
 #include "rtpStream.h"
 
-#define RTP_TO_YUV_ONGPU 	0 // Offload colour conversion to GPU if set
+using namespace std;
+#define GST_1_FUDGE       0
 #define RTP_CHECK 			  0 // 0 to disable RTP header checking
 #define RTP_THREADED 		  0 // transmit and recieve in a thread. RX thread blocks TX does not
 #define PITCH 				    4 // RGBX processing pitch
-
-void DumpHex(const void* data, size_t size) {
-	char ascii[17];
-	size_t i, j;
-	ascii[16] = '\0';
-	for (i = 0; i < size; ++i) {
-		printf("%02X ", ((unsigned char*)data)[i]);
-		if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
-			ascii[i % 16] = ((unsigned char*)data)[i];
-		} else {
-			ascii[i % 16] = '.';
-		}
-		if ((i+1) % 8 == 0 || i+1 == size) {
-			printf(" ");
-			if ((i+1) % 16 == 0) {
-				printf("|  %s \n", ascii);
-			} else if (i+1 == size) {
-				ascii[(i+1) % 16] = '\0';
-				if ((i+1) % 16 <= 8) {
-					printf(" ");
-				}
-				for (j = (i+1) % 16; j < 16; ++j) {
-					printf("   ");
-				}
-				printf("|  %s \n", ascii);
-			}
-		}
-	}
-}
 
 #if ENDIAN_SWAP
 	void endianswap32(uint32_t *data, int length);
@@ -65,48 +42,60 @@ void error(char *msg) {
     exit(0);
 }
 
-void rgbtoyuv(int y, int x, char* yuv, char* rgb)
+void 
+yuvtorgb(int height, int width, char* yuv, char* rgba) {
+  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_UYVY422, 
+                                    width, height, AV_PIX_FMT_RGB24, SWS_BICUBIC, 0, 0, 0);
+  uint8_t * inData[1] = { (uint8_t*)yuv }; // RGB24 have one plane
+  uint8_t * outData[1] = { (uint8_t*)rgba }; // YUYV have one plane
+  int inLinesize[1] = { width*2 }; // YUYV stride
+  int outLinesize[1] = { width*3 }; // RGB srtide
+  sws_scale(ctx, inData, inLinesize, 0, height, outData, outLinesize);
+}
+
+void
+yuvtorgba(int height, int width, char* yuv, char* rgb) {
+  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_UYVY422, 
+                                    width, height, AV_PIX_FMT_RGBA, SWS_BICUBIC, 0, 0, 0);
+  uint8_t * inData[1] = { (uint8_t*)yuv }; // RGB24 have one plane
+  uint8_t * outData[1] = { (uint8_t*)rgb }; // YUYV have one plane
+  int inLinesize[1] = { width*2 }; // YUYV stride
+  int outLinesize[1] = { width*4 }; // RGB srtide
+  sws_scale(ctx, inData, inLinesize, 0, height, outData, outLinesize);
+}
+
+void rgbatoyuv(int height, int width, char* rgba, char* yuv)
 {
-  int c,cc,R,G,B,Y,U,V;
-  int size;
+  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_RGBA, 
+                                    width, height, AV_PIX_FMT_YUYV422, 0, 0, 0, 0);
+  uint8_t * inData[1] = { (uint8_t*)rgba }; // RGB24 have one plane
+  uint8_t * outData[1] = { (uint8_t*)yuv }; // YUYV have one plane
+  int inLinesize[1] = { width*4 }; // RGB stride
+  int outLinesize[1] = { width*2 }; // YUYV srtide
+  sws_scale(ctx, inData, inLinesize, 0, height, outData, outLinesize);
+}
 
-  cc=0;
-  size = x*PITCH;
-  for (c=0;c<size;c+=PITCH)
-  {
-    R=rgb[c];
-    G=rgb[c+1];
-    B=rgb[c+2];
-    /* sample luma for every pixel */
-    Y  = (0.257 * R) + (0.504 * G) + (0.098 * B) + 16;
-
-    yuv[cc+1]=Y;
-    if (c % 2 != 0)
-
-    {
-        V =  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128;
-        yuv[cc]=V;
-    }
-    else
-    {
-        U = -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128;
-        yuv[cc]=U;
-    }
-    cc+=2;
-  }
+void rgbtoyuv(int height, int width, char* rgb, char* yuv)
+{
+  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_RGB24, 
+                                    width, height, AV_PIX_FMT_YUYV422, 0, 0, 0, 0);
+  uint8_t * inData[1] = { (uint8_t*)rgb }; // RGB24 have one plane
+  uint8_t * outData[1] = { (uint8_t*)yuv }; // YUYV have one plane
+  int inLinesize[1] = { width*3 }; // RGB stride
+  int outLinesize[1] = { width*2 }; // YUYV srtide
+  sws_scale(ctx, inData, inLinesize, 0, height, outData, outLinesize);
 }
 
 rtpStream::rtpStream(int height, int width)
 {
 	mHeight = height;
 	mWidth = width;
-    mFrame = 0;
-    mPortNoIn = 0;
-    mPortNoOut = 0;
-    gpuBuffer = 0;
-    pthread_mutex_init(&mutex, NULL);
-    bufferIn = (char*)malloc(height * width * 2); // Holds YUV data
-	printf("[RTP] rtpStream created %dx%d\n", mWidth, mHeight);
+  mFrame = 0;
+  mPortNoIn = 0;
+  mPortNoOut = 0;
+  pthread_mutex_init(&mutex, NULL);
+  bufferIn = (char*)malloc(height * width * 2); // Holds YUV data
+	cout << "[RTP] rtpStream created << " << mWidth << "x" << mHeight << "\n";
 }
 
 rtpStream::~rtpStream(void)
@@ -117,14 +106,14 @@ rtpStream::~rtpStream(void)
 /* Broadcast the stream to port i.e. 5004 */
 void rtpStream::rtpStreamIn( char* hostname, int portno)
 {
-	printf("[RTP] rtpStreamIn %s %d\n", hostname, portno);
+	cout << "[RTP] rtpStreamIn " << hostname << portno << "\n";
 	mPortNoIn = portno;
 	strcpy(mHostnameIn, hostname);
 }
 
 void rtpStream::rtpStreamOut(char* hostname, int portno)
 {
-	printf("[RTP] rtpStreamOut %s %d\n", hostname, portno);
+	cout << "[RTP] rtpStreamOut " << hostname << portno << "\n";
 	mPortNoOut = portno;
 	strcpy(mHostnameOut, hostname);
 }
@@ -134,13 +123,12 @@ bool rtpStream::Open()
 	if (mPortNoIn)
 	{
 		struct sockaddr_in si_me;
-
 		int i, slen = sizeof(si_me);
 
 		//create a UDP socket
 		if ((mSockfdIn=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		{
-			printf("ERROR opening socket\n");
+			cout << "ERROR opening socket\n";
 			return error;
 		}
 
@@ -154,7 +142,7 @@ bool rtpStream::Open()
 		//bind socket to port
 		if( bind(mSockfdIn , (struct sockaddr*)&si_me, sizeof(si_me) ) == -1)
 		{
-			printf("ERROR binding socket\n");
+			cout << "ERROR binding socket\n";
 			return error;
 		}
 #if	RTP_MULTICAST
@@ -166,7 +154,7 @@ bool rtpStream::Open()
 			multi.imr_interface.s_addr = htonl(INADDR_ANY);
 			if (setsockopt(mSockfdIn, IPPROTO_UDP, IP_ADD_MEMBERSHIP, &multi, sizeof(multi)) < 0)
 			{
-				printf("ERROR failed to join multicast group %s\n", IP_MULTICAST_IN);			
+				cout << "ERROR failed to join multicast group " << IP_MULTICAST_IN << "\n");			
 			}
 		}
 #endif
@@ -178,7 +166,7 @@ bool rtpStream::Open()
 		mSockfdOut = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 		if (mSockfdOut < 0)
 		{
-			printf("ERROR opening socket\n");
+			cout << "ERROR opening socket\n";
 			return error;
 		}
 
@@ -208,8 +196,7 @@ bool rtpStream::Open()
 		}
 #endif	
 	}
-
-    return true;
+  return true;
 }
 
 void rtpStream::Close()
@@ -258,12 +245,6 @@ void rtpStream::update_header(header *packet, int line, int last, int32_t timest
 	{
 		packet->rtp.protocol = packet->rtp.protocol | 1 << 23;
 	}
-  
-  printf("packet->payload 0x%x\n", packet->rtp.protocol);
-  printf("packet->timestamp 0x%x\n", packet->rtp.timestamp);
-  printf("packet->source 0x%x\n", packet->rtp.source);
-  printf(">>> Dump\n");
-  DumpHex(packet, 32);
 }
 
 void *ReceiveThread(void* data)
@@ -384,21 +365,17 @@ void *ReceiveThread(void* data)
 	}
 
 	arg->yuvframe = arg->stream->bufferIn;
-	arg->gpuAddr = arg->stream->gpuBuffer;
-
-//	printf(">>> 0x%08x, 0x%08x \n", arg->stream->bufferIn, arg->stream->gpuBuffer);
 
 	return 0;
 }
 
 static tx_data arg_rx;
-bool rtpStream::Capture( void** cpu, void** cuda, unsigned long timeout )
+bool rtpStream::Recieve( void** cpu, unsigned long timeout )
 {
 	sched_param param;
 	pthread_attr_t tattr;
 	pthread_t rx;
 	arg_rx.rgbframe = 0;
-	arg_rx.gpuAddr = 0;
 	arg_rx.width = mWidth;
 	arg_rx.height = mHeight;
 	arg_rx.stream = this;
@@ -419,7 +396,6 @@ bool rtpStream::Capture( void** cpu, void** cuda, unsigned long timeout )
 	ReceiveThread(&arg_rx);
 #endif
 	*cpu = (void*)bufferIn;
-	*cuda = (void*)gpuBuffer;
 	return true;
 }
 
@@ -455,7 +431,7 @@ int TransmitThread(void* data)
 
 			if (n < 0 ) 
 			{
-				printf("[RTP] Transmit socket failure fd=%d\n", arg->stream->mSockfdOut);
+				cout << "[RTP] Transmit socket failure fd=" << arg->stream->mSockfdOut << "\n";
 				return n;
 			}
 		}
@@ -469,10 +445,9 @@ sched_param param;
 pthread_t tx;
 static tx_data arg_tx;
 
-int rtpStream::Transmit(char* rgbframe, bool gpuAddr)
+int rtpStream::Transmit(char* rgbframe)
 {
 	arg_tx.rgbframe = rgbframe;
-	arg_tx.gpuAddr = gpuAddr;
 	arg_tx.width = mWidth;
 	arg_tx.height = mHeight;
 	arg_tx.stream = this;

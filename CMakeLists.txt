@@ -1,8 +1,11 @@
+include(FindPkgConfig)
 cmake_minimum_required(VERSION 2.8)
 project(rtp-payloader)
 message(STATUS "PROJECT_NAME = ${PROJECT_NAME}")
 add_library(rtp-payloader rtpStream.cpp )
-target_link_libraries(rtp-payloader png pthread)
+pkg_check_modules(SWSCALE REQUIRED libswscale)
+target_link_libraries(rtp-payloader png pthread ${SWSCALE_LIBRARIES})
+target_include_directories(rtp-payloader PUBLIC ${SWSCALE_INCLUDE_DIRS})
 set_target_properties(rtp-payloader PROPERTIES SOVERSION 1)
 #set_target_properties(rtp-payloader PROPERTIES VERSION ${PROJECT_VERSION})
 

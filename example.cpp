@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
       }
 
-      if ( rtp->Transmit(packet, false) < 0 ) break;
+      if ( rtp->Transmit(packet) < 0 ) break;
       
 #if 0
       /* move the image (png must have extra byte as the second image is green)  */

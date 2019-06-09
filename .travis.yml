@@ -1,5 +1,9 @@
+dist: xenial
+sudo: true
 language: cpp
-install:  true
+before_install:
+  - sudo apt update
+  - sudo apt install libswscale-dev
 compiler:
   - gcc
 script:
