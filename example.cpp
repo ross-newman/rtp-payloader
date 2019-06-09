@@ -25,7 +25,6 @@ Use his program to stream data to the udpsc example above on the tegra X1
 
 */
 
-#define ARM                   1    /* Perform endian swap */
 #define RTP_OUTPUT_IP         "127.0.0.1"
 //#define RTP_OUTPUT_IP         "255.255.255.255"
 #define RTP_OUTPUT_PORT       5004
@@ -84,7 +83,7 @@ int main(int argc, char **argv) {
 
         png_byte* row = row_pointers[c];
 
-        rgbtoyuv(STREAM_HEIGHT, STREAM_WIDTH, &packet[c], (char*)&row[move]);
+//        rgbtoyuv(STREAM_HEIGHT, STREAM_WIDTH, &packet[c], (char*)&row[move]);
 
       }
 

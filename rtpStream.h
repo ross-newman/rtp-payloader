@@ -39,41 +39,41 @@ Use his program to stream data to the udpsc example above on the tegra X1
 #include <netdb.h>
 #include <limits.h>
 
-#define ARM                   1    			/* Perform endian swap */
-#define RTP_VERSION           0x2  			/* RFC 1889 Version 2 */
+#define ENDIAN_SWAP           __arm__ || __amd64__ || __x86_64__ /* Perform endian swap, __arm__ defined by gcc */
+#define RTP_VERSION           0x2  			  /* RFC 1889 Version 2 */
 #define RTP_PADDING           0x0
 #define RTP_EXTENSION         0x0
 #define RTP_MARKER            0x0
-#define RTP_PAYLOAD_TYPE      0x60 			/* 96 Dynamic Type */
+#define RTP_PAYLOAD_TYPE      0x60 			  /* 96 Dynamic Type */
 #define RTP_SOURCE            0x12345678 	/* Sould be unique */
 #define RTP_FRAMERATE         25
 
 #define Hz90                  90000
-#define NUM_LINES_PER_PACKET  1 			/* can have more that one line in a packet */
-#define MAX_BUFSIZE 	      1280 * 3 		/* allow for RGB data upto 1280 pixels wide */
-#define MAX_UDP_DATA 		  1500  		/* enough space for three lines of UDP data MTU size should be checked */
+#define NUM_LINES_PER_PACKET  1 			    /* can have more that one line in a packet */
+#define MAX_BUFSIZE 	        1280 * 3 		/* allow for RGB data upto 1280 pixels wide */
+#define MAX_UDP_DATA 		      1500  		  /* enough space for three lines of UDP data MTU size should be checked */
 
 static unsigned long sequence_number;
 
 /* 12 byte RTP Raw video header */
-typedef struct
+typedef struct __attribute__((__packed__))
 {
-  int32_t protocol;
-  int32_t timestamp;
-  int32_t source;
+  int32_t protocol:32;
+  int32_t timestamp:32;
+  int32_t source:32;
 } rtp_header;
 
 
-typedef struct  __attribute__((__packed__))
+typedef struct __attribute__((__packed__))
 {
-  int16_t length;
-  int16_t line_number;
-  int16_t offset;
+  int16_t length:16;
+  int16_t line_number:16;
+  int16_t offset:16;
 } line_header;
 
 typedef struct __attribute__((__packed__))
 {
-  int16_t extended_sequence_number;
+  int16_t extended_sequence_number:16;
   line_header line[NUM_LINES_PER_PACKET];
 } payload_header;
 
@@ -84,7 +84,7 @@ typedef struct  __attribute__((__packed__))
   payload_header payload;
 } header;
 
-typedef struct
+typedef struct  __attribute__((__packed__))
 {
   header head;
   char data[MAX_BUFSIZE];

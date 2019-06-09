@@ -12,16 +12,43 @@
 #include "rtpStream.h"
 
 #define RTP_TO_YUV_ONGPU 	0 // Offload colour conversion to GPU if set
-#define RTP_CHECK 			0 // 0 to disable RTP header checking
-#define RTP_THREADED 		0 // transmit and recieve in a thread. RX thread blocks TX does not
-#define PITCH 				4 // RGBX processing pitch
+#define RTP_CHECK 			  0 // 0 to disable RTP header checking
+#define RTP_THREADED 		  0 // transmit and recieve in a thread. RX thread blocks TX does not
+#define PITCH 				    4 // RGBX processing pitch
 
-#if ARM
+void DumpHex(const void* data, size_t size) {
+	char ascii[17];
+	size_t i, j;
+	ascii[16] = '\0';
+	for (i = 0; i < size; ++i) {
+		printf("%02X ", ((unsigned char*)data)[i]);
+		if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+			ascii[i % 16] = ((unsigned char*)data)[i];
+		} else {
+			ascii[i % 16] = '.';
+		}
+		if ((i+1) % 8 == 0 || i+1 == size) {
+			printf(" ");
+			if ((i+1) % 16 == 0) {
+				printf("|  %s \n", ascii);
+			} else if (i+1 == size) {
+				ascii[(i+1) % 16] = '\0';
+				if ((i+1) % 16 <= 8) {
+					printf(" ");
+				}
+				for (j = (i+1) % 16; j < 16; ++j) {
+					printf("   ");
+				}
+				printf("|  %s \n", ascii);
+			}
+		}
+	}
+}
+
+#if ENDIAN_SWAP
 	void endianswap32(uint32_t *data, int length);
 	void endianswap16(uint16_t *data, int length);
 #endif
-
-extern void DumpHex(const void* data, size_t size);
 
 typedef struct float4 {
     float x;
@@ -51,7 +78,7 @@ void rgbtoyuv(int y, int x, char* yuv, char* rgb)
     G=rgb[c+1];
     B=rgb[c+2];
     /* sample luma for every pixel */
-    Y  =      (0.257 * R) + (0.504 * G) + (0.098 * B) + 16;
+    Y  = (0.257 * R) + (0.504 * G) + (0.098 * B) + 16;
 
     yuv[cc+1]=Y;
     if (c % 2 != 0)
@@ -198,7 +225,7 @@ void rtpStream::Close()
 	}
 }
 
-#if ARM
+#if ENDIAN_SWAP
 void endianswap32(uint32_t *data, int length)
 {
 	int c = 0;
@@ -231,6 +258,12 @@ void rtpStream::update_header(header *packet, int line, int last, int32_t timest
 	{
 		packet->rtp.protocol = packet->rtp.protocol | 1 << 23;
 	}
+  
+  printf("packet->payload 0x%x\n", packet->rtp.protocol);
+  printf("packet->timestamp 0x%x\n", packet->rtp.timestamp);
+  printf("packet->source 0x%x\n", packet->rtp.source);
+  printf(">>> Dump\n");
+  DumpHex(packet, 32);
 }
 
 void *ReceiveThread(void* data)
@@ -265,7 +298,7 @@ void *ReceiveThread(void* data)
 			len = recvfrom(arg->stream->mSockfdIn, arg->stream->udpdata, MAX_UDP_DATA, 0, NULL, NULL);
 
 			packet = (rtp_packet *)arg->stream->udpdata;
-#if ARM
+#if ENDIAN_SWAP
 			endianswap32((uint32_t *)packet, sizeof(rtp_header)/4);
 #endif
 			//
@@ -309,7 +342,7 @@ void *ReceiveThread(void* data)
 			while (scanline)
 			{
 				int more;
-#if ARM
+#if ENDIAN_SWAP
 				endianswap16((uint16_t *)&packet->head.payload.line[scancount], sizeof(line_header)/2 );
 #endif
 				more = (packet->head.payload.line[scancount].offset & 0x8000) >> 15;
@@ -372,10 +405,10 @@ bool rtpStream::Capture( void** cpu, void** cuda, unsigned long timeout )
 
 #if RTP_THREADED
 	// Elevate priority to get the RTP packets in quickly
-    pthread_attr_init(&tattr);
-    pthread_attr_getschedparam(&tattr, &param);
+  pthread_attr_init(&tattr);
+  pthread_attr_getschedparam(&tattr, &param);
 	param.sched_priority = 99;
-    pthread_attr_setschedparam(&tattr, &param);
+  pthread_attr_setschedparam(&tattr, &param);
 
 	// Start a thread so we can start capturing the next frame while transmitting the data
 	pthread_create(&rx, &tattr, ReceiveThread, &arg_rx );
@@ -393,12 +426,12 @@ bool rtpStream::Capture( void** cpu, void** cuda, unsigned long timeout )
 int TransmitThread(void* data)
 {
     rtp_packet packet;
-	tx_data *arg;
+	  tx_data *arg;
     char *yuv;
     int c=0;
     int n=0;
 
-	arg = (tx_data *)data;
+	  arg = (tx_data *)data;
 
     sequence_number=0;
 
@@ -414,7 +447,7 @@ int TransmitThread(void* data)
 			if (c==arg->height-1) last=1;
 				arg->stream->update_header((header*)&packet, c, last, time, RTP_SOURCE);
 
-#if ARM
+#if ENDIAN_SWAP
 			endianswap32((uint32_t *)&packet, sizeof(rtp_header)/4);
 			endianswap16((uint16_t *)&packet.head.payload, sizeof(payload_header)/2);
 #endif
