@@ -19,7 +19,7 @@ extern "C" {
 using namespace std;
 #define GST_1_FUDGE       0
 #define RTP_CHECK 			  0 // 0 to disable RTP header checking
-#define RTP_THREADED 		  0 // transmit and recieve in a thread. RX thread blocks TX does not
+#define RTP_THREADED 		  1 // transmit and recieve in a thread. RX thread blocks TX does not
 #define PITCH 				    4 // RGBX processing pitch
 
 #if ENDIAN_SWAP
@@ -44,7 +44,7 @@ void error(char *msg) {
 
 void 
 yuvtorgb(int height, int width, char* yuv, char* rgba) {
-  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_UYVY422, 
+  SwsContext * ctx = sws_getContext(width, height, AV_PIX_FMT_YUYV422, 
                                     width, height, AV_PIX_FMT_RGB24, SWS_BICUBIC, 0, 0, 0);
   uint8_t * inData[1] = { (uint8_t*)yuv }; // RGB24 have one plane
   uint8_t * outData[1] = { (uint8_t*)rgba }; // YUYV have one plane
@@ -349,7 +349,7 @@ void *ReceiveThread(void* data)
 				length = packet->head.payload.line[c].length & 0xFFFF;
 
 #if GST_1_FUDGE 
-				memcpy(&arg->stream->bufferIn[pixel+1], &arg->stream->udpdata[os], length);
+				memcpy(&arg->stream->bufferIn[pixel+3], &arg->stream->udpdata[os], length);
 #else
 				memcpy(&arg->stream->bufferIn[pixel], &arg->stream->udpdata[os], length);
 #endif
@@ -399,7 +399,7 @@ bool rtpStream::Recieve( void** cpu, unsigned long timeout )
 	return true;
 }
 
-int TransmitThread(void* data)
+void *TransmitThread(void* data)
 {
     rtp_packet packet;
 	  tx_data *arg;
@@ -432,7 +432,7 @@ int TransmitThread(void* data)
 			if (n < 0 ) 
 			{
 				cout << "[RTP] Transmit socket failure fd=" << arg->stream->mSockfdOut << "\n";
-				return n;
+				return 0;
 			}
 		}
     }
