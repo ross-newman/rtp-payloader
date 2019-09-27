@@ -28,15 +28,32 @@ Use his program to stream data to the udpsc example above on the tegra X1
 #ifndef __RTP_STREAM_H__
 #define __RTP_STREAM_H__
 
-#include <byteswap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#if __MINGW64__ || __MINGW32__
+#include <winsock2.h>
+/* Swap bytes in 16 bit value.  */
+#define __bswap_constant_16(x) \
+     ((((x) >> 8) & 0xffu) | (((x) & 0xffu) << 8))
+/* Swap bytes in 32 bit value.  */
+#define __bswap_constant_32(x) \
+     ((((x) & 0xff000000u) >> 24) | (((x) & 0x00ff0000u) >>  8) |	      \
+      (((x) & 0x0000ff00u) <<  8) | (((x) & 0x000000ffu) << 24))
+# define __bswap_32(x) \
+  (__extension__							      \
+   ({ register unsigned int __bsx = (x); __bswap_constant_32 (__bsx); }))
+# define __bswap_16(x) \
+    (__extension__							      \
+     ({ unsigned short int __bsx = (x); __bswap_constant_16 (__bsx); }))
+#else
+#include <byteswap.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
 #include <limits.h>
 
 #define ENDIAN_SWAP           __arm__ || __amd64__ || __x86_64__ /* Perform endian swap, __arm__ defined by gcc */

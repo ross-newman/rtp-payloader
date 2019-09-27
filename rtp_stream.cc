@@ -7,10 +7,15 @@
 #include <string>
 #include <pthread.h>
 #include <sched.h>
+#if __MINGW64__ || __MINGW32__
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
+#endif
 extern "C" {
 #include "libswscale/swscale.h"
 }
@@ -178,9 +183,9 @@ bool rtpStream::Open()
 		}
 
 		/* build the server's Internet address */
-		bzero((char *) &mServeraddrOut, sizeof(mServeraddrOut));
+		memset((char *) &mServeraddrOut, 0, sizeof(mServeraddrOut));
 		mServeraddrOut.sin_family = AF_INET;
-		bcopy((char *)mServerOut->h_addr,
+		memcpy((char *)mServerOut->h_addr,
 		  (char *)&mServeraddrOut.sin_addr.s_addr, mServerOut->h_length);
 		mServeraddrOut.sin_port = htons(mPortNoOut);
 
@@ -230,7 +235,7 @@ void endianswap16(uint16_t *data, int length)
 
 void rtpStream::update_header(header *packet, int line, int last, int32_t timestamp, int32_t source)
 {
-	bzero((char *)packet, sizeof(header));
+	memset((char *)packet, 0, sizeof(header));
 	packet->rtp.protocol = RTP_VERSION << 30;
 	packet->rtp.protocol = packet->rtp.protocol | RTP_PAYLOAD_TYPE << 16;
 	packet->rtp.protocol = packet->rtp.protocol | sequence_number++;
