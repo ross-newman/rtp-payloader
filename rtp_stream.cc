@@ -7,10 +7,15 @@
 #include <string>
 #include <pthread.h>
 #include <sched.h>
+#if __MINGW64__ || __MINGW32__
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
+#endif
 extern "C" {
 #include "libswscale/swscale.h"
 }
@@ -190,7 +195,7 @@ bool RtpStream::Open() {
       return n;
     }
 #endif
-  }
+	}
   return true;
 }
 
@@ -235,6 +240,7 @@ void RtpStream::UpdateHeader(Header * packet, int line, int last,
     packet->rtp.protocol = packet->rtp.protocol | 1 << 23;
   }
 }
+
 void *ReceiveThread(void *data) {
   TxData *arg;
   ssize_t len = 0;
