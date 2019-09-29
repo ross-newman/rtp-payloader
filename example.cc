@@ -40,69 +40,68 @@ Use his program to stream data to the udpsc example above on the tegra X1
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
 #include "pngget.h"
 #include "rtp_stream.h"
 
 int main(int argc, char **argv) {
-    int sockfd, portno, n, c , frame = 0;
-    int move=0;
-    char *yuv;
-    png_byte* row;
-    char packet[BUFSIZE];
-    rtpStream* rtp;
-    png_bytep * row_pointers;
-    
-    yuv = (char*)malloc((STREAM_WIDTH * STREAM_HEIGHT) * 2);
+  int sockfd, portno, n, c, frame = 0;
+  int move = 0;
+  char *yuv;
+  png_byte *row;
+  char packet[BUFSIZE];
+  RtpStream *rtp;
+  png_bytep *row_pointers;
 
-    printf("Abaco Systems\n");
-    sequence_number=0;
-    
-    read_png_file((char*)"lenna-lg.png");
-    row_pointers = get_row_pointwes();
+  yuv = (char *) malloc((STREAM_WIDTH * STREAM_HEIGHT) * 2);
 
-    /* setup RTP streaming class */
-    rtp = new rtpStream(STREAM_WIDTH, STREAM_WIDTH);
-    rtp->rtpStreamOut((char*)RTP_OUTPUT_IP, RTP_OUTPUT_PORT);
-    rtp->Open();
+  printf("Example RTP streaming\n");
 
-    /* get a message from the user */
-    bzero(packet, BUFSIZE);
+  read_png_file((char *) "lenna-lg.png");
+  row_pointers = get_row_pointwes();
 
-    /* Loop frames forever */
-    while (1)
-    {
-      struct timeval NTP_value;
-      int32_t time = 10000;
-      
-      
-      /* Convert all the scan lines */
-      for (c=0;c<(STREAM_HEIGHT);c++)
-      {
-        int x,last = 0;
+  /* setup RTP streaming class */
+  rtp = new RtpStream(STREAM_WIDTH, STREAM_WIDTH);
+  rtp->RtpStreamOut((char *) RTP_OUTPUT_IP, RTP_OUTPUT_PORT);
+  rtp->Open();
 
-        png_byte* row = row_pointers[c];
+  /* get a message from the user */
+  bzero(packet, BUFSIZE);
+
+  /* Loop frames forever */
+  while (1) {
+    struct timeval NTP_value;
+    int32_t time = 10000;
+
+
+    /* Convert all the scan lines */
+    for (c = 0; c < (STREAM_HEIGHT); c++) {
+      int x, last = 0;
+
+      png_byte *row = row_pointers[c];
 
 //        rgbtoyuv(STREAM_HEIGHT, STREAM_WIDTH, &packet[c], (char*)&row[move]);
 
-      }
-
-      if ( rtp->Transmit(packet) < 0 ) break;
-      
-#if 0
-      /* move the image (png must have extra byte as the second image is green)  */
-      move+=3;
-      if (move==STREAM_WIDTH*3) move=0;
-#endif
-      /* approximatly 24 frames a second */
-      usleep(1000000 / RTP_FRAMERATE);
-      time += (Hz90 / RTP_FRAMERATE);
-      printf("Sent frame %d\n", frame++);
     }
-    
-    free(yuv);
-    free(rtp);
-    printf("Example terminated...\n");
-    
-    return 0;
+
+    if (rtp->Transmit(packet) < 0)
+      break;
+
+#if 0
+    /* move the image (png must have extra byte as the second image is green)  */
+    move += 3;
+    if (move == STREAM_WIDTH * 3)
+      move = 0;
+#endif
+    /* approximatly 24 frames a second */
+    usleep(1000000 / RTP_FRAMERATE);
+    time += (Hz90 / RTP_FRAMERATE);
+    printf("Sent frame %d\n", frame++);
+  }
+
+  free(yuv);
+  free(rtp);
+  printf("Example terminated...\n");
+
+  return 0;
 }
